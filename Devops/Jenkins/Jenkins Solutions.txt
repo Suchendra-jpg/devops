@@ -1,0 +1,62 @@
+Assignment 1:
+
+1) https://github.com/Suchendra-jpg/july9th.git  (repo link)
+
+2) Add a webhook to above repository  in github.  // http://3.94.88.20:8080/github-webhook/
+
+3) Create a freestyle project in Jenkins with below configurations:
+	a) SCM - git -> repo link
+	b) Build steps -> execute shell -> mkdir -p /tmp/pullcode
+                                       git clone -b master https://github.com/Suchendra-jpg/july9th.git /tmp/pullcode
+									
+4) Make changes to the repo and you can see build being triggered automatically and extracted code to pullcode directory as expected.
+
+5) Verify with below commands in deployed instance on which jenkins is running:
+	a) cd /tmp/pullcode
+	b) ls                                  //latest hello.java file present
+	
+
+Assignment 2:
+
+1) We would require total of three ec2 instances to perform the task , these would be the name of our instances:
+	a) master 
+	b) test
+	c) prod
+	
+2) The SG should have appropriate inbound rules such as : SSH , HTTP & Custom TCP(8080).
+
+3) Execute below commands in both test and prod nodes individually:
+
+sudo su
+passwd
+abcd123 and abcd1234 respectively.
+vi /etc/ssh/sshd_config
+port22-> PermitRootLogin yes -> PasswordAuthentication yes
+systemctl restart sshd
+apt-get update -y
+apt-get install openjdk-11-jdk
+	
+4) Launch the master server with its public IP + :8080 and enter Jenkins UN and PWD.  (http://54.174.131.67:8080/)
+
+5) Add 2 slave nodes to Jenkins master (test-node & prod-node) with appropriate creds and IP addresses.
+
+6) Create a webhook for the repo. to trigger the event successfully.
+
+7) Create a freestyle project in Jenkins with below configurations: (test-job)
+	a) SCM - git -> repo link
+	b) Build steps -> execute shell -> mkdir -p /tmp/pullcode
+                                       git clone -b child https://github.com/Suchendra-jpg/july9th.git /tmp/pullcode
+									   
+8) Create a freestyle project in Jenkins with below configurations: (prod-job)
+	a) SCM - git -> repo link
+	b) Build steps -> execute shell -> mkdir -p /tmp/pullcode
+                                       git clone -b master https://github.com/Suchendra-jpg/july9th.git /tmp/pullcode
+									   
+9) When code inside child is edited and committed that will automatically trigger test-job.
+
+10) When code inside master is edited and committed that will automatically trigger prod-job.
+
+
+Assignment 3:
+
+For the above setup just configure post build action as trigerring prod-job once test-job is successfull. 

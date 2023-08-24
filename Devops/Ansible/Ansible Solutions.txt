@@ -1,0 +1,181 @@
+Assignment 1 solution:
+
+1) Create 3 redhat instances for the following task. (Ansible-Master -> slave1 , slave2).
+
+2) Connect with all the three instances using .ppk format key-pair with help of putty.
+
+3) Install ansible on master and edit the hosts file with below details:(vi /etc/ansible/hosts )
+
+	[slave-1]
+	35.173.223.245
+
+	[slave-2]
+	54.209.96.189
+
+4) Follow below precedure to connect with slave nodes from master:
+
+	Master : ssh-keygen
+	slave-1: abcd12(passwd) & edit sshd_config file
+	slave-2: abcd123(passwd) & edit sshd_config file
+	
+	Master: ssh-copy-id root@35.173.223.245 ->  ansible -m ping 'slave-1' (Success)
+			ssh-copy-id root@54.209.96.189  ->  ansible -m ping 'slave-2' (Success)
+			
+5) vi task1.yml
+
+---
+- hosts: slave-1
+  remote_user: root
+  tasks:
+    - name: Install Java on slave 1
+      yum:
+        name: java-11-openjdk
+        state: latest
+
+- hosts: slave-2
+  remote_user: root
+  tasks:
+    - name: Install MySQL on slave 2
+      yum:
+        name: mysql-server
+        state: latest
+
+6) ansible-playbook task1.yml
+
+7) You can verify if the task is succesfull by running following commands in appropriate instances:(java -version & mysql -version)
+
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+Assignment 2 solution:
+
+1) vi copyscript.sh
+
+#!/bin/bash
+echo "This text has been added by custom script" >> /tmp/file.txt
+
+2) chmod 777 copyscript.sh
+
+3) vi task2.yml
+
+---
+- name: Run custom script on all hosts
+  hosts: all
+  remote_user: root
+  tasks:
+    - name: Transfer script to remote host
+      copy:
+        src: /home/ec2-user/copyscript.sh
+        dest: /tmp/copyscript.sh
+        mode: '0755'  # Ensure execute permissions
+
+    - name: Run custom script
+      shell: /tmp/copyscript.sh
+
+4) ansible-playbook task2.yml
+
+5) Verify in both slave nodes by these commands: (cd /tmp and ls)
+
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+Assignment 3 solution:
+
+1) Create a role to install apache2 on slave1 using below steps on master:
+
+pwd (/home/ec2-user)
+ansible-galaxy init apache2_role --offline
+cd apache2_role/tasks
+vi main.yml
+
+---
+- name: Install Apache2
+  yum:
+    name: httpd
+    state: latest
+  become: true
+    
+2) Create another role to install nginx on slave2 using below steps on master:
+
+pwd (/home/ec2-user)
+ansible-galaxy init nginx_role --offline
+tree nginx_role
+cd nginx_role/tasks
+vi main.yml
+
+---
+- name: Install NGINX
+  yum:
+    name: nginx
+    state: latest
+  become: true
+
+3) Create a playbook to acheive the above tasks and also create appropriate inventory file.
+
+pwd (/home/ec2-user)
+vi install_webservers.yml
+
+---
+- name: Install Apache2 and NGINX
+  hosts: all
+  become: true
+
+  roles:
+    - role: apache2_role
+      when: inventory_hostname == 'slave1'
+
+    - role: nginx_role
+      when: inventory_hostname == 'slave2'
+
+vi inventory.ini
+
+[webservers]
+slave1 ansible_host=34.207.104.126
+slave2 ansible_host=54.237.249.162
+
+ansible slave1,slave2 -i inventory.ini -m ping (Success)
+ansible-playbook -i inventory.ini install_webservers.yml
+
+4) Verify if appropriate web servers are installed on both slave instances by copy pasting public_ip of these instances into web broswer.
+
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+Assignment 4 solution:
+
+1) Creating custon index.html file using nginx_role by foll. below steps:
+
+cd nginx_role/files
+vi index.html
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Welcome to My Website</title>
+</head>
+<body>
+    <h1>Hello, World!</h1>
+    <p>This is a basic HTML page.</p>
+</body>
+</html>
+
+2) Edit the main.yml file as required to accomplish the task: 
+
+cd nginx_role/tasks
+vi main.yml
+
+---
+- name: Install NGINX
+  yum:
+    name: nginx
+    state: latest
+  become: true
+
+- name: Copy custom index.html
+  copy:
+    src: files/index.html
+    dest: /usr/share/nginx/html/index.html
+  when: inventory_hostname == 'slave2'
+
+3) ansible-playbook install_webservers.yml
+
+4) Verify by copy pasting public_ip of slave-2 instance into web broswer and check if it's showing the content ofcustom html file copied.
+
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------

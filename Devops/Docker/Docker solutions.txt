@@ -1,0 +1,131 @@
+Assignment 1 solution:
+
+1) After connecting to your ec2 instance type-in below commands:
+
+	sudo apt-get update
+	sudo su
+	apt-get install docker.io
+	docker pull ubuntu
+	docker run -it -p 80:80 ubuntu
+	
+2) Inside the pulled container execute below commands:
+	
+	apt-get update
+	apt-get install apache2
+	service apache2 status
+	service apache2 start
+
+3) Copy the public IP address of ec2 instance and paste it in browser.(This should open apache2 default page i.e, 54.163.24.109:80)
+   [Allow port 80 from SG]
+  
+ 
+Assignment 2 solution:
+
+1) After connecting to your ec2 instance type-in below commands:
+
+	docker ps -a
+	docker images
+	docker commit b8ae apache              //creates a new Docker Image based on an existing container with the ID 'b8ae..' and assigns it the name apache.
+	docker run -it -p 81:80 apache
+
+2) Once you are inside the container execute below commands:
+	
+	service apache2 status
+	service apache2 start
+	
+3) Copy the public IP address of ec2 instance and paste it in browser.  (This should open apache2 default page i.e, 54.163.24.109:81)
+   [Allow port 81 from SG]
+
+
+Assignment 3 solution:
+
+1) After connecting to your ec2 instance  type-in below commands:
+
+    docker ps -a
+	docker login
+	docker tag apache suchi1998/apache
+	docker push suchi1998/apache
+	 
+2) Launch another ec2 instance and type-in below commands:
+
+	sudo su
+	apt-get update
+	apt-get install docker.io
+	docker pull suchi1998/apache
+	docker images
+	docker run -it -p 80:80 suchi1998/apache
+	
+3) Once the container is up and running execute below command:
+
+	service start apache2
+	
+4) Copy the public IP address of second ec2 instance and paste it in browser.(This should open apache2 default page i.e, 44.210.111.135:80)
+   [Allow port 80 from SG]
+   
+   
+Assignmnet 4 solution:
+
+1) After connecting to your ec2 instance type-in below commands:
+
+	mkdir dockerfiles
+	cd dockerfiles
+	nano Dockerfile
+		# Use the official Ubuntu base image
+		FROM ubuntu:latest
+		
+		# Update and install Apache2
+		RUN apt-get update && apt-get install -y apache2
+		
+		# Start Apache2 when the container starts
+		CMD ["apachectl", "-D", "FOREGROUND"]
+		
+		# Expose port 80 to the outside world
+	    EXPOSE 80
+		
+	docker build -t my-apache-image /home/ubuntu/dockerfiles
+	docker run -it -p 80:80 my-apache-image
+
+2) Copy the public IP address of the ec2 instance and paste it in browser.(This should open apache2 default page i.e, 44.210.111.135:80)
+   [Allow port 80 from SG]
+
+
+Assignment 5 solution:
+
+1)  After connecting to your ec2 instance type-in below commands:
+
+	cd dockerfiles
+	nano index.html
+		<!DOCTYPE html>
+		<html>
+		<head>
+			<title>My Sample Page</title>
+		</head>
+		<body>
+			<h1>Hello, Docker!</h1>
+			<p>This is a sample HTML page inside a Docker container.</p>
+		</body>
+		</html>
+		
+	nano Dockerfile
+		# Use the official Ubuntu base image
+		FROM ubuntu:latest
+		
+		# Update and install Apache2
+		RUN apt-get update && apt-get install -y apache2
+		
+		# Replace the default index.html with your custom file
+		COPY index.html /var/www/html/
+		
+		# Start Apache2 when the container starts
+		CMD ["apachectl", "-D", "FOREGROUND"]
+		
+		# Expose port 80 to the outside world
+		EXPOSE 80
+		
+	docker build -t my-apache-image /home/ubuntu/dockerfiles
+	docker run -d -p 80:80 my-apache-image
+
+
+2) Copy the public IP address of the ec2 instance and paste it in browser.(This should show contents of index.html file i.e.,44.210.111.135:80)
+   [Hello, Docker!
+    This is a sample HTML page inside a Docker container.]
